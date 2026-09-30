@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>碧罗雪山老窝火腿 · 3D包装</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#1a140e;color:#f4ead6;font-family:"Songti SC","STSong",serif}
+#s{position:fixed;inset:0}
+header,footer{position:fixed;z-index:2;left:0;right:0;pointer-events:none}
+header{top:22px;padding:0 24px;display:flex;justify-content:space-between;align-items:flex-start}
+h1{margin:0;font-size:20px;letter-spacing:.2em;font-weight:500}
+header p{margin:8px 0 0;font-size:12px;letter-spacing:.16em;color:#d8c39a}
+footer{bottom:22px;text-align:center}
+.bar{pointer-events:auto;display:inline-flex;gap:8px;background:rgba(20,14,8,.55);padding:8px;border-radius:999px;border:1px solid rgba(196,160,86,.28)}
+button{border:0;background:transparent;color:#f4ead6;padding:10px 16px;border-radius:999px;letter-spacing:.14em;cursor:pointer;font:inherit}
+button.on,button:hover{background:#c4a056;color:#2a1c0a}
+.hint{margin-top:8px;font-size:11px;color:#cbb892;letter-spacing:.12em}
+</style>
+</head>
+<body>
+<div id="s"></div>
+<header>
+  <div>
+    <h1>碧罗雪山老窝火腿</h1>
+    <p>云上良品 · 千年贡腿 · 三年陈化 · 3000g</p>
+  </div>
+</header>
+<footer>
+  <div class="bar">
+    <button id="btnSpin" class="on">自动旋转</button>
+    <button id="btnOpen">开盒</button>
+    <button id="btnReset">正面</button>
+  </div>
+  <div class="hint">拖动旋转 · 滚轮缩放 · 可直接转发此链接</div>
+</footer>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+function tex(draw, w=1024, h=1024){
+  const c=document.createElement("canvas"); c.width=w; c.height=h;
+  const g=c.getContext("2d"); draw(g,w,h);
+  const t=new THREE.CanvasTexture(c);
+  t.colorSpace=THREE.SRGBColorSpace; t.anisotropy=8; return t;
+}
+function mountains(g,x,y,w,h,color="#d4b36a"){
+  g.strokeStyle=color; g.lineWidth=3; g.beginPath();
+  const pts=[[0,.7],[.12,.45],[.22,.58],[.34,.22],[.46,.4],[.55,.12],[.66,.38],[.78,.28],[.9,.5],[1,.68]];
+  pts.forEach((p,i)=>{const X=x+p[0]*w,Y=y+p[1]*h; i?g.lineTo(X,Y):g.moveTo(X,Y)});
+  g.stroke();
+  g.beginPath();
+  [[.34,.22,.28,.55],[.55,.12,.48,.5],[.78,.28,.72,.55]].forEach(p=>{g.moveTo(x+p[0]*w,y+p[1]*h);g.lineTo(x+p[2]*w,y+p[3]*h)});
+  g.stroke();
+}
+const topT=tex((g,w,h)=>{
+  g.fillStyle="#f3ead8"; g.fillRect(0,0,w,h);
+  g.fillStyle="#111"; g.fillRect(48,48,w-96,h-96);
+  g.strokeStyle="#c4a056"; g.lineWidth=6; g.strokeRect(64,64,w-128,h-128);
+  g.fillStyle="#c4a056";
+  g.font="28px serif"; g.fillText("云上良品",96,130);
+  g.textAlign="center";
+  g.font="bold 72px serif"; g.fillText("碧罗雪山老窝火腿",w/2,250);
+  g.font="26px serif"; g.fillText("BI LUO XUE SHAN LAO WO",w/2,310);
+  g.font="28px serif"; g.fillText("千年贡腿 · 碧罗雪山",w/2,370);
+  mountains(g,120,430,w-240,360);
+  g.font="22px serif"; g.textAlign="left"; g.fillText("非遗 · 贡",96,h-110);
+  g.textAlign="right"; g.fillText("净含量 3000g",w-96,h-110);
+},1024,720);
+const sideT=tex((g,w,h)=>{
+  g.fillStyle="#f3ead8"; g.fillRect(0,0,w,h);
+  g.fillStyle="#c4a056"; g.textAlign="center";
+  g.font="bold 56px serif"; g.fillText("碧罗雪山老窝火腿",w/2,h/2-10);
+  g.font="24px serif"; g.fillText("千年贡腿 · 碧罗雪山",w/2,h/2+40);
+},1024,320);
+const innerT=tex((g,w,h)=>{
+  g.fillStyle="#111"; g.fillRect(0,0,w,h);
+  mountains(g,80,80,w-160,h-280);
+  g.fillStyle="#c4a056"; g.textAlign="center";
+  g.font="42px serif"; g.fillText("碧罗雪山",w/2,h-80);
+},1024,720);
+const botT=tex((g,w,h)=>{
+  g.fillStyle="#f3ead8"; g.fillRect(0,0,w,h);
+  g.strokeStyle="#c4a056"; g.strokeRect(40,40,w-80,h-80);
+  g.fillStyle="#c4a056"; g.textAlign="center";
+  g.font="40px serif"; g.fillText("云上良品",w/2,h/2);
+  g.font="22px serif"; g.fillText("碧罗雪山老窝火腿  3000g",w/2,h/2+48);
+},1024,720);
+const scene=new THREE.Scene(); scene.background=new THREE.Color(0x1a140e);
+const camera=new THREE.PerspectiveCamera(32,innerWidth/innerHeight,.1,80);
+camera.position.set(4.6,3.4,6.2);
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;
+document.getElementById("s").appendChild(renderer.domElement);
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.maxPolarAngle=Math.PI*.48;
+controls.minDistance=4; controls.maxDistance=14; controls.target.set(0,.15,0);
+scene.add(new THREE.AmbientLight(0xffe6c0,.8));
+const key=new THREE.DirectionalLight(0xfff1d0,1.55); key.position.set(5,8,4); scene.add(key);
+scene.add(new THREE.HemisphereLight(0xffe6b8,0x2a1c12,.4));
+const mat=t=>new THREE.MeshStandardMaterial({map:t,roughness:.55,metalness:.05});
+const cream=new THREE.MeshStandardMaterial({color:0xf3ead8,roughness:.7});
+const W=3.8,H=.92,D=2.55;
+const closed=new THREE.Group();
+closed.add(new THREE.Mesh(new THREE.BoxGeometry(W,H,D),[mat(sideT),mat(sideT),mat(topT),mat(botT),mat(sideT),mat(sideT)]));
+scene.add(closed);
+const openG=new THREE.Group(); openG.visible=false;
+const base=new THREE.Mesh(new THREE.BoxGeometry(W,H*.62,D),cream); base.position.y=-H*.19;
+const ham=new THREE.Mesh(new THREE.CapsuleGeometry(.38,1.35,8,16), new THREE.MeshStandardMaterial({color:0x8a3a32,roughness:.45}));
+ham.rotation.z=Math.PI/2; ham.position.set(.2,.42,0);
+const lid=new THREE.Mesh(new THREE.BoxGeometry(W,.1,D),[cream,cream,mat(topT),mat(innerT),cream,cream]);
+lid.position.set(-W*.55,1.15,0); lid.rotation.z=Math.PI/2.15;
+openG.add(base,ham,lid); scene.add(openG);
+const gnd=new THREE.Mesh(new THREE.CircleGeometry(4.2,64), new THREE.MeshStandardMaterial({color:0x2a2218,roughness:1}));
+gnd.rotation.x=-Math.PI/2; gnd.position.y=-H/2-.01; scene.add(gnd);
+let spin=true,opened=false;
+btnSpin.onclick=()=>{spin=!spin;btnSpin.classList.toggle("on",spin)};
+btnOpen.onclick=()=>{opened=!opened;closed.visible=!opened;openG.visible=opened;btnOpen.textContent=opened?"合上":"开盒";btnOpen.classList.toggle("on",opened)};
+btnReset.onclick=()=>{camera.position.set(4.6,3.4,6.2);controls.target.set(0,.15,0)};
+addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+(function tick(){requestAnimationFrame(tick);if(spin){closed.rotation.y+=.006;openG.rotation.y+=.006}controls.update();renderer.render(scene,camera)})();
+</script>
+</body>
+</html>
